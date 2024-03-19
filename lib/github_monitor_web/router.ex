@@ -8,6 +8,7 @@ defmodule GithubMonitorWeb.Router do
     plug :put_root_layout, html: {GithubMonitorWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug GithubMonitorWeb.Plugs.SetUser
   end
 
   pipeline :api do

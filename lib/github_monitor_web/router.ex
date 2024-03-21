@@ -1,6 +1,8 @@
 defmodule GithubMonitorWeb.Router do
   use GithubMonitorWeb, :router
 
+  alias RepositoryLive
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -19,6 +21,11 @@ defmodule GithubMonitorWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+
+    live "/repositories", RepositoryLive.Index, :index
+    live "/repositories/new", RepositoryLive.Index, :new
+    live "/repositories/:id", RepositoryLive.Index, :show
+    live "/repositories/:id/edit", RepositoryLive.Index, :edit
   end
 
   scope "/auth", GithubMonitorWeb do

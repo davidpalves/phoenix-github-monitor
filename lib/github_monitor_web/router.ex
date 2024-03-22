@@ -20,11 +20,11 @@ defmodule GithubMonitorWeb.Router do
   scope "/", GithubMonitorWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    # get "/", PageController, :home
 
     live "/repositories", RepositoryLive.Index, :index
     live "/repositories/new", RepositoryLive.Index, :new
-    live "/repositories/:id", RepositoryLive.Index, :show
+    live "/repositories/:id", RepositoryLive.Show, :show
     live "/repositories/:id/edit", RepositoryLive.Index, :edit
   end
 

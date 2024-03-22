@@ -6,7 +6,10 @@ defmodule GithubMonitorWeb.RepositoryLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, stream(socket, :repositories, Github.list_repositories())}
+    if connected?(socket), do: Github.subscribe_repository()
+
+    updated_repos = Github.list_repositories()
+    {:ok, assign(socket, :repositories, updated_repos)}
   end
 
   @impl true
@@ -32,9 +35,43 @@ defmodule GithubMonitorWeb.RepositoryLive.Index do
     |> assign(:repository, nil)
   end
 
+  def handle_info({:updated, _}, socket) do
+    updated_urls = Github.list_repositories()
+
+    {:noreply, assign(socket, :urls, updated_urls)}
+  end
+
+  def handle_info({:saved, repository}, socket) do
+    updated_repositories = [socket.assigns.repositories | repository]
+
+    {:noreply, assign(socket, :repositories, updated_repositories)}
+  end
+
+  def handle_info({:deleted, repository}, socket) do
+    updated_repositories =
+      socket.assigns.repositories
+      |> Enum.reject(fn repo ->
+        repo.id == repository.id
+      end)
+
+    {:noreply, assign(socket, :repositories, updated_repositories)}
+  end
+
   @impl true
   def handle_info({GithubMonitorWeb.RepositoryLive.FormComponent, {:saved, repository}}, socket) do
-    {:noreply, stream_insert(socket, :repositories, repository)}
+    updated_repos = Github.list_repositories()
+
+    {:noreply, assign(socket, :repositories, updated_repos)}
+  end
+
+  @impl true
+  def handle_info({GithubMonitorWeb.RepositoryLive.FormComponent, {:deleted, repository}}, socket) do
+    updated_repos = Github.list_repositories()
+
+    {:noreply,
+    socket
+    |> put_flash(:info, "Repository #{repository.full_name} has been removed")
+    |> assign(:urls, updated_repos)}
   end
 
   @impl true
@@ -42,6 +79,17 @@ defmodule GithubMonitorWeb.RepositoryLive.Index do
     repository = Github.get_repository!(id)
     {:ok, _} = Github.delete_repository(repository)
 
-    {:noreply, stream_delete(socket, :repositories, repository)}
+    Github.broadcast_delete_repository(repository)
+
+    updated_repositories =
+      socket.assigns.repositories
+      |> Enum.reject(fn repo ->
+        repo.id == repository.id
+      end)
+
+    {:noreply,
+    socket
+    |> put_flash(:info, "Repository #{repository.full_name} has been removed")
+    |> assign(:repositories, updated_repositories)}
   end
 end

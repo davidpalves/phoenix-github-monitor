@@ -8,6 +8,37 @@ defmodule GithubMonitor.Github do
 
   alias GithubMonitor.Github.Repository
 
+  @pub_sub_topic "repository"
+
+  def subscribe_repository do
+    Phoenix.PubSub.subscribe(GithubMonitor.PubSub, @pub_sub_topic)
+  end
+
+  def broadcast_updated_repository(repository) do
+    Phoenix.PubSub.broadcast(
+      GithubMonitor.PubSub,
+      @pub_sub_topic,
+      {:updated, repository}
+    )
+  end
+
+  def broadcast_new_repository(repository) do
+    Phoenix.PubSub.broadcast(
+      GithubMonitor.PubSub,
+      @pub_sub_topic,
+      {:saved, repository}
+    )
+  end
+
+  def broadcast_delete_repository(repository) do
+    Phoenix.PubSub.broadcast(
+      GithubMonitor.PubSub,
+      @pub_sub_topic,
+      {:deleted, repository}
+    )
+  end
+
+
   @doc """
   Returns the list of repositories.
 

@@ -132,4 +132,24 @@ defmodule GithubMonitor.Github do
   def change_repository(%Repository{} = repository, attrs \\ %{}) do
     Repository.changeset(repository, attrs)
   end
+
+  def parse_repository_name(full_name) do
+    [owner_username, name] = String.split(full_name, "/")
+
+    %{full_name: full_name, name: name, owner_username: owner_username}
+  end
+
+  def fetch_repository_information(%{name: name, owner_username: owner_username} = attrs, client) do
+    # TODO: Add error handling
+    {status, repo, _} = Tentacat.Repositories.repo_get(client, owner_username, name)
+
+    attrs
+    |> fill_in_repository_information(repo)
+  end
+
+  defp fill_in_repository_information(attrs, %{"html_url" => url, "description" => description}) do
+    attrs
+    |> Map.put(:url, url)
+    |> Map.put(:description, description)
+  end
 end

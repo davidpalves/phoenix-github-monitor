@@ -1,4 +1,5 @@
 defmodule GithubMonitorWeb.RepositoryLive.FormComponent do
+  alias Tentacat.Client
   use GithubMonitorWeb, :live_component
 
   alias GithubMonitor.Github
@@ -19,11 +20,7 @@ defmodule GithubMonitorWeb.RepositoryLive.FormComponent do
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={@form[:full_name]} type="text" label="Full name" />
-        <.input field={@form[:name]} type="text" label="Name" />
-        <.input field={@form[:description]} type="text" label="Description" />
-        <.input field={@form[:owner_username]} type="text" label="Owner username" />
-        <.input field={@form[:url]} type="text" label="Url" />
+        <.input field={@form[:full_name]} type="text" label="Repository name" placeholder="owner/repository-name" />
         <:actions>
           <.button phx-disable-with="Saving...">Save Repository</.button>
         </:actions>
@@ -71,7 +68,14 @@ defmodule GithubMonitorWeb.RepositoryLive.FormComponent do
     end
   end
 
-  defp save_repository(socket, :new, repository_params) do
+  defp save_repository(socket, :new, %{"full_name" => full_name}) do
+    client =  Tentacat.Client.new(%{access_token: socket.assigns.current_user.token})
+
+    repository_params =
+      full_name
+      |> Github.parse_repository_name()
+      |> Github.fetch_repository_information(client)
+
     case Github.create_repository(repository_params) do
       {:ok, repository} ->
         notify_parent({:saved, repository})

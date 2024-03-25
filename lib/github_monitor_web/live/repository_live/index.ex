@@ -2,14 +2,21 @@ defmodule GithubMonitorWeb.RepositoryLive.Index do
   use GithubMonitorWeb, :live_view
 
   alias GithubMonitor.Github
+  alias GithubMonitor.Accounts
   alias GithubMonitor.Github.Repository
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(_params, %{"user_id" => user_id}, socket) do
     if connected?(socket), do: Github.subscribe_repository()
 
+    user = Accounts.get_user(user_id)
+
     updated_repos = Github.list_repositories()
-    {:ok, assign(socket, :repositories, updated_repos)}
+    {:ok,
+     socket
+     |> assign(:repositories, updated_repos)
+     |> assign(:current_user, user)
+    }
   end
 
   @impl true
@@ -58,7 +65,7 @@ defmodule GithubMonitorWeb.RepositoryLive.Index do
   end
 
   @impl true
-  def handle_info({GithubMonitorWeb.RepositoryLive.FormComponent, {:saved, repository}}, socket) do
+  def handle_info({GithubMonitorWeb.RepositoryLive.FormComponent, {:saved, _repository}}, socket) do
     updated_repos = Github.list_repositories()
 
     {:noreply, assign(socket, :repositories, updated_repos)}

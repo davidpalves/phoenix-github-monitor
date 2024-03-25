@@ -63,7 +63,7 @@ config :phoenix, :json_library, Jason
 
 config :ueberauth, Ueberauth,
       providers: [
-        github: {Ueberauth.Strategy.Github, [default_scope: "user:email"]}
+        github: {Ueberauth.Strategy.Github, [default_scope: "user,repo,read:org,admin:repo_hook"]}
       ]
 
 config :ueberauth, Ueberauth.Strategy.Github.OAuth,
